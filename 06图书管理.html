@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图书管理</title>
+
+    <!-- 新 Bootstrap 核心 CSS 文件 -->
+    <link href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+    <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+</head>
+
+<body style="padding: 20px;">
+
+    <!-- 添加图书的Panel面板 -->
+
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h3 class="panel-title">添加新图书</h3>
+        </div>
+        <div class="panel-body form-inline">
+            <div class="input-group">
+                <div class="input-group-addon">书名</div>
+                <input type="text" class="form-control" id="ipt" placeholder="请输入书名">
+            </div>
+            <div class="input-group">
+                <div class="input-group-addon">作者</div>
+                <input type="text" class="form-control" id="iptAuthor" placeholder="请输入作者">
+            </div>
+            <div class="input-group">
+                <div class="input-group-addon">出版社</div>
+                <input type="text" class="form-control" id="iptPublisher" placeholder="请输入出版社">
+            </div>
+
+            <button type="button" id="btnAdd" class="btn btn-primary">添加</button>
+
+
+        </div>
+    </div>
+
+    <!-- 图书的表格 -->
+
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>书名</th>
+                <th>作者</th>
+                <th>出版社</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="bootList">
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+
+
+</body>
+<script>
+    var baseURL = "http://www.liulongbin.top:3006";
+
+    function getBookList() {
+        $.ajax({
+            url: baseURL + "/api/getbooks",
+            type: "GET",
+            success: function(res) {
+                if (res.status === 200) {
+
+                    var sortData = res.data.sort(function(item1, item2) {
+                            return item1.id - item2.id
+                        })
+                        // console.log(sortData);
+                    var tbodyTrs = '';
+
+                    sortData.forEach(item => {
+                        tbodyTrs += `
+                            <tr>
+                                <td>${item.id}</td>
+                                <td>${item.bookname}</td>
+                                <td>${item.author}</td>
+                                <td>${item.publisher}</td>
+                                <td><button type="button" class="btn btn-link" onclick="del(${item.id}, this)">删除</button></td>
+                            </tr>
+                            `;
+                    });
+                    $('#bootList').empty().html(tbodyTrs);
+                }
+            }
+        })
+    }
+
+    function del(id, that) {
+        console.log(id);
+        // $(that).closest('tr').remove();
+        $.ajax({
+            url: baseURL + "/api/delbook",
+            type: "GET",
+            data: {
+                id
+            },
+            success: function(res) {
+                // console.log(res);
+                if (res.status === 200) {
+                    alert(res.msg);
+                    $(that).closest('tr').remove();
+                }
+            }
+        })
+    }
+
+    function addBook(obj) {
+        $.ajax({
+            url: baseURL + "/api/addbook",
+            type: "POST",
+            data: obj,
+            success: function(res) {
+                if (res.status === 201) {
+                    getBookList();
+                } else {
+                    alert("添加图书成功！")
+                }
+            }
+        })
+    }
+    $(function() {
+        getBookList();
+        $('#btnAdd').click(function() {
+            var bookname = $('#ipt').val().trim();
+            var author = $('#iptAuthor').val().trim();
+            var publisher = $('#iptPublisher').val().trim();
+            if (bookname.length <= 0 || author.length <= 0 || publisher.length <= 0) {
+                return alert('添加数据不能为空！')
+            } else {
+                let obj = {
+                    bookname,
+                    author,
+                    publisher
+                }
+                addBook(obj);
+            }
+        })
+
+    })
+</script>
+
+</html>
